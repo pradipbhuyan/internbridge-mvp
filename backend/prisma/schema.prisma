@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  EMPLOYER
+  ADMIN
+}
+
+enum CityTier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum InternshipMode {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  REJECTED
+  SELECTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+
+  studentProfile  StudentProfile?
+  employerProfile EmployerProfile?
+}
+
+model StudentProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  collegeName    String
+  degree         String
+  graduationYear Int
+  city           String
+  cityTier       CityTier
+  skills         String[]
+  resumeUrl      String?
+  projects       Project[]
+  applications   Application[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          String @id @default(cuid())
+  studentId   String
+  title       String
+  description String
+  link        String?
+
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model EmployerProfile {
+  id          String @id @default(cuid())
+  userId      String @unique
+  companyName String
+  industry    String
+  city        String
+  cityTier    CityTier
+  website     String?
+  internships Internship[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Internship {
+  id             String         @id @default(cuid())
+  employerId     String
+  title          String
+  description    String
+  domain         String
+  skillsRequired String[]
+  city           String
+  cityTier       CityTier
+  mode           InternshipMode
+  durationWeeks  Int
+  stipendMonthly Int?
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+
+  employer     EmployerProfile @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  applications Application[]
+}
+
+model Application {
+  id           String            @id @default(cuid())
+  internshipId String
+  studentId    String
+  status       ApplicationStatus @default(APPLIED)
+  coverNote    String?
+  createdAt    DateTime          @default(now())
+
+  internship Internship     @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  student    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([internshipId, studentId])
+}

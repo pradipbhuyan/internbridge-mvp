@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: internbridge-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: internbridge
+    ports:
+      - "5432:5432"
+    volumes:
+      - internbridge_pg:/var/lib/postgresql/data
+
+volumes:
+  internbridge_pg:
